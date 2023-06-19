@@ -18,6 +18,7 @@ from happymimi_voice_msgs.srv import TTS, YesNo, ActionPlan
 from find_bag.srv import FindBagSrv, FindBagSrvResponse, GraspBagSrv, GraspBagSrvResponse
 #from actplan_executor.msg import APExecutorAction, APExecutorGoal
 #from find_bag.srv import FindBagSrv\
+from enter_room.srv import EnterRoom
 
 base_path = roslib.packages.get_pkg_dir('happymimi_teleop') + '/src/'
 sys.path.insert(0, base_path)
@@ -31,4 +32,7 @@ class Enter(smach.State):
     def __init__(self):
         smach.state.__init__(self,outcomes = ["enter_finish"])
 
-        
+        self.enter = rospy.ServiceProxy('/enter_room_server', EnterRoom)
+
+    def execute(self,userdate):
+        self.enter(1.0,0.5)
