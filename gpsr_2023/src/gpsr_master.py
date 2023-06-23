@@ -36,10 +36,25 @@ class Enter(smach.State):
 
     def execute(self,userdate):
         self.enter(1.0,0.5)
+        return "enter_finish"
+
 
 class DecideMove(smach.State):
     def __init__(self):
-        smach.state.__init__(self,outcomes = [""])
+        smach.state.__init__(self,outcomes = ["decide_finish",
+                                              "cmd_finish"])
+
+        self.navi = rospy.ServiceProxy("/navi_location_server",NaviLocation)
+
+        self.cmd_count =0
+
+    def execute(self,userdate):
+        if self.cmd_count <=3:
+
+            return "decide_finish"
+
+        else:
+            return "cmd_finish"
 
 
 
@@ -56,5 +71,12 @@ if __name__ == '__main__':
         smach.StateMachine.add(
                     'ENTER',
                     Enter(),
-                    transitions = {"enter_finish":"DECIDEMOVE"})
+                    transitions = {"enter_finish":"################"})
+        
+        smach.StateMachine.add(
+
+        )
+        
+
+    outcome = sm_top.execute()
         
