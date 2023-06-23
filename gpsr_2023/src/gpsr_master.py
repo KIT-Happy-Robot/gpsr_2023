@@ -36,3 +36,25 @@ class Enter(smach.State):
 
     def execute(self,userdate):
         self.enter(1.0,0.5)
+
+class DecideMove(smach.State):
+    def __init__(self):
+        smach.state.__init__(self,outcomes = [""])
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    rospy.init_node('gpsr_master')
+    sm_top = smach.StateMachine(outcomes = "finish_sm")
+
+    with sm_top:
+        smach.StateMachine.add(
+                    'ENTER',
+                    Enter(),
+                    transitions = {"enter_finish":"DECIDEMOVE"})
+        
