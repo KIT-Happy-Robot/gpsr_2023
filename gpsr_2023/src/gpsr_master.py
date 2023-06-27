@@ -46,15 +46,20 @@ class DecideMove(smach.State):
 
         self.navi = rospy.ServiceProxy("/navi_location_server",NaviLocation)
 
+        self.current_loc = "None"
         self.cmd_count =0
 
     def execute(self,userdate):
-        if self.cmd_count <=3:
-
-            return "decide_finish"
+        if self.cmd_count >=4:
+            self.navi("##############")
+            return "cmd_finish"
+        
+        elif self.current_loc != 'operator':
+            self.navi_srv('operator')
+            return 'decide_finish'
 
         else:
-            return "cmd_finish"
+            return "decide_finish"
 
 
 
