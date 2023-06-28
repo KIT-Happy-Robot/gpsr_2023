@@ -30,7 +30,7 @@ wave_srv = rospy.ServiceProxy('/waveplay_srv', StrTrg)
 
 class Enter(smach.State):
     def __init__(self):
-        smach.state.__init__(self,outcomes = ["enter_finish"])
+        smach.State.__init__(self,outcomes = ["enter_finish"])
 
         self.enter = rospy.ServiceProxy('/enter_room_server', EnterRoom)
 
@@ -41,7 +41,7 @@ class Enter(smach.State):
 
 class DecideMove(smach.State):
     def __init__(self):
-        smach.state.__init__(self,outcomes = ["decide_finish",
+        smach.State.__init__(self,outcomes = ["decide_finish",
                                               "cmd_finish"])
 
         self.navi = rospy.ServiceProxy("/navi_location_server",NaviLocation)
@@ -60,6 +60,12 @@ class DecideMove(smach.State):
 
         else:
             return "decide_finish"
+        
+
+class ListenCommand(smach.State):
+    def __init__(self):
+        smach.State.__init__(self,
+                             outcomes="")
 
 
 
@@ -68,20 +74,24 @@ class DecideMove(smach.State):
 
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     rospy.init_node('gpsr_master')
     sm_top = smach.StateMachine(outcomes = "finish_sm")
 
     with sm_top:
         smach.StateMachine.add(
-                    'ENTER',
+                    "ENTER",
                     Enter(),
-                    transitions = {"enter_finish":"################"})
+                    transitions = {"enter_finish":"DECIDEMOVE"})
         
         smach.StateMachine.add(
-
-        )
+                    "DECIDEMOVE",
+                    DecideMove(),
+                    transitions = {"decide_finish":"LISTHENCOMMAND",
+                                    "cmd_finish":"finish_sm"})
         
+
+        smach.StateMachine.add
 
     outcome = sm_top.execute()
         
