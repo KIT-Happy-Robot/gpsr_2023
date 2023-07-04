@@ -51,7 +51,8 @@ class DecideMove(smach.State):
 
     def execute(self,userdate):
         if self.cmd_count >=4:
-            self.navi("##############")
+            self.navi("entrance")
+            tts_srv("finish gpsr")
             return "cmd_finish"
         
         elif self.current_loc != 'operator':
@@ -65,7 +66,14 @@ class DecideMove(smach.State):
 class ListenCommand(smach.State):
     def __init__(self):
         smach.State.__init__(self,
-                             outcomes="")
+                             outcomes=["listen_success",
+                             "listen_failure",
+                             "next_cmd"])
+        
+        self.head_pub = rospy.Publisher('/servo/head', Float64, queue_size = 1)
+
+        self.listen_srv = rospy.ServiceProxy(('/planning_srv', ActionPlan))
+        self.yesno_srv = rospy.ServiceProxy('/yes_no', YesNo)
 
 
 
