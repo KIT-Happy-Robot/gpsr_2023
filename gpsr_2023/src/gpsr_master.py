@@ -42,20 +42,21 @@ class Enter(smach.State):
 
 class DecideMove(smach.State):
     def __init__(self):
-        smach.State.__init__(self,outcomes = ["decide_finish",
-                                              "cmd_finish"])
+        smach.State.__init__(self,
+                             outcomes = ["decide_finish",
+                                         "all_cmd_finish"],
+                            input_keys = ['cmd_count_in'])
 
         self.navi = rospy.ServiceProxy("/navi_location_server",NaviLocation)
 
         self.current_loc = "None"
-        self.cmd_count =0
 
     def execute(self,userdate):
         rospy.loginfo("Executing stata: DECIDE_MOVE")
-        if self.cmd_count >=4:
+        if userdate.cmd_count_in >=4:
             self.navi("entrance")
             tts_srv("finish gpsr")
-            return "cmd_finish"
+            return "all_cmd_finish"
         
         elif self.current_loc != 'operator':
             self.navi_srv('operator')
@@ -68,9 +69,11 @@ class DecideMove(smach.State):
 class ListenCommand(smach.State):
     def __init__(self):
         smach.State.__init__(self,
-                             outcomes=["listen_success",
-                             "listen_failure",
-                             "next_cmd"])
+                             outcomes = ["listen_success",
+                                        "listen_failure",
+                                        "next_cmd"],
+                             input_keys = ["cmd_count_in"],
+                             output_keys = ["cmd_count_out"])
         
         self.head_pub = rospy.Publisher('/servo/head', Float64, queue_size = 1)
 
@@ -81,16 +84,19 @@ class ListenCommand(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo("Executing stata: LISTEN_COMMAND")
-
+        cmd_count = userdata.cmd_count_in
         self.head_pub(0)
         if self.listen_count <= 3:
-
+            tts_srv("CommandNumber is" + str(cmd_count))
             tts_srv("ListenCount is" + str(self.listen_count))
             tts_srv("Please instruct me")
             actplan_res = self.listen_srv()
 
             if actplan_res.result:
                 tts_srv("Is this correct?")
+                answer = self.yesno_srv().result
+                
+
 
 
 
@@ -100,21 +106,30 @@ class ListenCommand(smach.State):
 if __name__ == "__main__":
     rospy.init_node('gpsr_master')
     sm_top = smach.StateMachine(outcomes = "finish_sm")
+    sm_top.userdata.cmd_count = 1
 
     with sm_top:
         smach.StateMachine.add(
                     "ENTER",
                     Enter(),
-                    transitions = {"enter_finish":"DECIDEMOVE"})
+                    transitions = {"enter_finish":"DECIDE_MOVE"})
         
         smach.StateMachine.add(
-                    "DECIDEMOVE",
+                    "DECIDE_MOVE",
                     DecideMove(),
-                    transitions = {"decide_finish":"LISTHENCOMMAND",
-                                    "cmd_finish":"finish_sm"})
+                    transitions = {"decide_finish":"LISTHEN_COMMAND",
+                                    "all_cmd_finish":"finish_sm"},
+                    remapping = {"cmd_count_in":"cmd_count"})
         
 
-        smach.StateMachine.add
+        smach.StateMachine.add(
+                    "LISTEN_COMMAND",
+                    ListenCommand(),
+                    transitions = {"listen_success":"###############",
+                                   "listen_failure":"LISTEN_COMMAND",
+                                   "next_cmd":"DECIDE_MOVE"}
+                    remapping = {"cmd_count_in":"cmd_count",
+                                 "cmd_count_out":"cmd_count"})
 
     outcome = sm_top.execute()
         
