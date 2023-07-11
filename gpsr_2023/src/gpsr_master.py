@@ -35,6 +35,7 @@ class Enter(smach.State):
         self.enter = rospy.ServiceProxy('/enter_room_server', EnterRoom)
 
     def execute(self,userdate):
+        rospy.loginfo("Executing stata: ENTER")
         self.enter(1.0,0.5)
         return "enter_finish"
 
@@ -50,6 +51,7 @@ class DecideMove(smach.State):
         self.cmd_count =0
 
     def execute(self,userdate):
+        rospy.loginfo("Executing stata: DECIDE_MOVE")
         if self.cmd_count >=4:
             self.navi("entrance")
             tts_srv("finish gpsr")
@@ -75,7 +77,20 @@ class ListenCommand(smach.State):
         self.listen_srv = rospy.ServiceProxy(('/planning_srv', ActionPlan))
         self.yesno_srv = rospy.ServiceProxy('/yes_no', YesNo)
 
+        self.listen_count = 1
 
+    def execute(self, userdata):
+        rospy.loginfo("Executing stata: LISTEN_COMMAND")
+
+        self.head_pub(0)
+        if self.listen_count <= 3:
+
+            tts_srv("ListenCount is" + str(self.listen_count))
+            tts_srv("Please instruct me")
+            actplan_res = self.listen_srv()
+
+            if actplan_res.result:
+                tts_srv("Is this correct?")
 
 
 
